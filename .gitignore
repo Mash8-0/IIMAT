@@ -1,0 +1,8 @@
+backend/node_modules/
+backend/.env
+backend/uploads/applications/*
+backend/uploads/programmes/*
+backend/uploads/schools/*
+!backend/uploads/applications/.gitkeep
+!backend/uploads/programmes/.gitkeep
+!backend/uploads/schools/.gitkeep

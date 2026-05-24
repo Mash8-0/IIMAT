@@ -1,0 +1,180 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Prisma Schema — IIMAT College Backend
+// Change DATABASE_URL in .env to point to your PostgreSQL instance
+// ─────────────────────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Set DATABASE_URL in your .env file
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ENUM TYPES
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum Role {
+  super_admin
+  admin
+  staff
+}
+
+enum Status {
+  active
+  inactive
+}
+
+enum InquiryStatus {
+  new
+  contacted
+  processing
+  completed
+  rejected
+}
+
+enum ApplicationStatus {
+  submitted
+  under_review
+  offer_letter_processing
+  offer_letter_issued
+  admitted
+  rejected
+}
+
+enum DocumentType {
+  passport
+  academic
+  photo
+  english_cert
+  other
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// USER MODEL (Admin / Staff)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(staff)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCHOOL / FACULTY MODEL
+// ─────────────────────────────────────────────────────────────────────────────
+
+model School {
+  id          String     @id @default(cuid())
+  title       String
+  slug        String     @unique
+  description String     @db.Text
+  icon        String?
+  image       String?
+  status      Status     @default(active)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  programmes  Programme[]
+
+  @@map("schools")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PROGRAMME MODEL
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Programme {
+  id                   String   @id @default(cuid())
+  schoolId             String
+  title                String
+  slug                 String   @unique
+  level                String   // e.g. "Diploma", "Degree", "Foundation"
+  duration             String   // e.g. "2.5 Years"
+  intake               String   // e.g. "March, July, November"
+  tuitionFee           String?
+  description          String   @db.Text
+  requirements         String?  @db.Text
+  careerOpportunities  String?  @db.Text
+  image                String?
+  status               Status   @default(active)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  school               School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@map("programmes")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STUDENT INQUIRY MODEL
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Inquiry {
+  id                   String        @id @default(cuid())
+  fullName             String
+  email                String
+  phone                String
+  interestedProgramme  String?
+  message              String        @db.Text
+  source               String?       // e.g. "website", "social_media", "referral"
+  status               InquiryStatus @default(new)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  @@map("inquiries")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// APPLICATION MODEL
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Application {
+  id                    String            @id @default(cuid())
+  studentName           String
+  email                 String
+  phone                 String
+  passportNo            String
+  nationality           String
+  dateOfBirth           DateTime
+  selectedProgramme     String
+  academicQualification String
+  englishQualification  String?
+  applicationStatus     ApplicationStatus @default(submitted)
+  remarks               String?           @db.Text
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  documents             ApplicationDocument[]
+
+  @@map("applications")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// APPLICATION DOCUMENT MODEL
+// ─────────────────────────────────────────────────────────────────────────────
+
+model ApplicationDocument {
+  id            String       @id @default(cuid())
+  applicationId String
+  documentType  DocumentType
+  fileName      String
+  filePath      String
+  fileSize      Int
+  mimeType      String
+  createdAt     DateTime     @default(now())
+
+  application   Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("application_documents")
+}

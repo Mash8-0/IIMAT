@@ -1,0 +1,8 @@
+const router = require('express').Router();
+const { getDashboard } = require('../controllers/dashboardController');
+const { protect } = require('../middleware/authMiddleware');
+
+// GET /api/admin/dashboard
+router.get('/', protect, getDashboard);
+
+module.exports = router;
